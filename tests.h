@@ -37,4 +37,6 @@ void moment_test();
 void moment_derivs_test();
 void va_derivs_test(struct polylogs* plgs);
 void test_collision_interp();
+
+void test_massive_colls();
 #endif

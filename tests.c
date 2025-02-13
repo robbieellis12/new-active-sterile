@@ -665,12 +665,12 @@ printf("vp val: %.10e\n",vpd.vp);
 void test_collision_interp()
 {
     struct massless_coll_table mct;
-    mct.T0=1;
-    mct.T1=20;
-    mct.NT=60;
+    mct.x0=0.1;
+    mct.x1=20;
+    mct.Nx=200;
     mct.c0=0;
-    mct.c1=5;
-    mct.Nc=20;
+    mct.c1=20;
+    mct.Nc=50;
     double m=100;
     mct.m=m;
     mct.cs=&c_vv_vv;
@@ -679,25 +679,126 @@ void test_collision_interp()
     fill_massless_coll_table(&mct,y);
     double t2=omp_get_wtime();
     printf("Time to fill table: %.10e\n",t2-t1);
-    double T=10;
+    double x=0.2;
     double c=1.45;
-    double testval=interp_massless_col(m,T,c,&mct);
-    printf("Test val: %.10e\n",testval);
-    double predictval=ts_quad_massless_coll(m,T,c,y,&c_vv_vv);
+    double testval=interp_massless_col(x,c,&mct);
+    printf("Interp val: %.10e\n",testval);
+    double predictval=ts_quad_massless_coll(x,c,y,&c_vv_vv);
     printf("Predicted val: %.10e\n",predictval);
-
-    struct massless_coll_vals vals=get_massless_coll_vals(m,T,c,y,&c_vv_vv);
+/*
+    struct massless_coll_vals vals=get_massless_coll_vals(x,c,y,&c_vv_vv);
 double h=0.001;
-    struct massless_coll_vals valsT=get_massless_coll_vals(m,T+h,c,y,&c_vv_vv);
-    struct massless_coll_vals valsc=get_massless_coll_vals(m,T,c+h,y,&c_vv_vv);
-    struct massless_coll_vals valsTc=get_massless_coll_vals(m,T+h,c+h,y,&c_vv_vv);
+    struct massless_coll_vals valsT=get_massless_coll_vals(x+h,c,y,&c_vv_vv);
+    struct massless_coll_vals valsc=get_massless_coll_vals(x,c+h,y,&c_vv_vv);
+    struct massless_coll_vals valsTc=get_massless_coll_vals(x+h,c+h,y,&c_vv_vv);
     //printf("Predicted val f: %.10e\n",vals.f);
-    printf("Predicted val f_dt: %.10e\n",vals.f_dT);
+    printf("Predicted val f_dt: %.10e\n",vals.f_dx);
     printf("Test val f_dt: %.10e\n",(valsT.f-vals.f)/h);
     printf("Predicted val f_dc: %.10e\n",vals.f_dc);
     printf("Test val f_dc: %.10e\n",(valsc.f-vals.f)/h);
-    printf("Predicted val f_dt_dc: %.10e\n",vals.f_dTc);
-    printf("Test val f_dt_dc: %.10e\n",(valsTc.f-valsT.f-valsc.f+vals.f)/(h*h));
-    printf("Predicted overall val f_dt: %.10e\n",vals.f_dT*T*T*T/(m*m*M_PI*M_PI));
+    printf("Predicted val f_dt_dc: %.10e\n",vals.f_dxc);
+    printf("Test val f_dt_dc: %.10e\n",(valsTc.f-valsT.f-valsc.f+vals.f)/(h*h));*/
     free_massless_coll_table(&mct);
+}
+
+
+void test_massive_colls()
+{
+struct massive_coll_table mct;
+
+
+    double m=1;
+    double b=1;
+    double T=m/b;
+    double c=0;
+//struct massive_coll_vals vals=get_collision_vals2(m,b,c);
+/*
+struct massive_coll_vals vals1=get_collision_vals(m,b,c);
+    struct collision_vals vals2=Moment1_omp(m,T,c);
+    printf("Interp val: %.10e\n",vals.f*8*T/(m*m*m*TWO_PI_4));
+    //printf("Interp val: %.10e\n",vals1.f);
+
+    printf("Predicted val: %.10e\n",vals2.coll);
+    printf("ratio: %.10e\n",(vals2.coll/(vals.f)));*/
+
+
+
+
+    mct.b0=0.1;
+    mct.b1=5;
+    mct.Nb=60;
+    mct.c0=0;
+    mct.c1=5;
+    mct.Nc=50;
+    mct.m=m;
+    double y=1;
+    fill_massive_coll_table(&mct,y);
+
+
+
+
+
+    struct collision_vals vals=interp_massive_colls(m,b,c,&mct);
+    struct collision_vals vals2=Moment1_omp(m,m/b,c);
+    printf("Interp val: %.10e\n",vals.coll);
+    printf("Predicted val: %.10e\n",vals2.coll);
+    printf("Interp moment: %.10e\n",vals.moment);
+    printf("Predicted moment: %.10e\n",vals2.moment);
+    printf("ratio: %.10e\n",vals2.moment/vals.moment);
+    printf("ratio: %.10e\n",vals2.coll/vals.coll);
+    free_massive_coll_table(&mct);
+    double h=1e-5;
+    /*
+    struct massive_coll_vals vals=get_collision_vals(m,b,c);
+    struct massive_coll_vals valsb=get_collision_vals(m,b+h,c);
+    struct massive_coll_vals valsc=get_collision_vals(m,b,c+h);
+    printf("f: %.10e\n",vals.f);
+    printf("f_db: %.10e\n",vals.f_db);
+    printf("Estimated f_db: %.10e\n",(valsb.f-vals.f)/h);
+
+    printf("f_dc: %.10e\n",vals.f_dc);
+    printf("Estimated f_dc: %.10e\n",(valsc.f-vals.f)/h);
+
+    printf("f_dbc: %.10e\n",vals.f_dbc);
+    printf("Estimated f_dbc: %.10e\n",(get_collision_vals(m,b+h,c+h).f-valsb.f-valsc.f+vals.f)/(h*h));
+    
+    printf("f_moment: %.10e\n",vals.f_moment);
+
+    printf("f_moment_db: %.10e\n",vals.f_db_moment);
+     printf("Estimated f_moment_db: %.10e\n",(valsb.f_moment-vals.f_moment)/h);
+    
+    printf("f_moment_dc: %.10e\n",vals.f_dc_moment);
+     printf("Estimated f_moment_dc: %.10e\n",(valsc.f_moment-vals.f_moment)/h);
+   
+    printf("f_moment_dbc: %.10e\n",vals.f_dbc_moment);
+   printf("Estimated f_moment_dbc: %.10e\n",(get_collision_vals(m,b+h,c+h).f_moment-valsb.f_moment-valsc.f_moment+vals.f_moment)/(h*h));
+*/
+   //repeat with new function:
+   struct massive_coll_vals valsnew=get_collision_vals2(m,b,c);
+   struct massive_coll_vals valsnewb=get_collision_vals2(m,b+h,c);
+   struct massive_coll_vals valsnewc=get_collision_vals2(m,b,c+h);
+   struct massive_coll_vals valsnewbc=get_collision_vals2(m,b+h,c+h);
+
+   printf("f: %.10e\n",valsnew.f);
+   printf("f_db: %.10e\n",valsnew.f_db);
+    printf("Estimated f_db: %.10e\n",(valsnewb.f-valsnew.f)/h);
+
+    printf("f_dc: %.10e\n",valsnew.f_dc);
+    printf("Estimated f_dc: %.10e\n",(valsnewc.f-valsnew.f)/h);
+
+    printf("f_dbc: %.10e\n",valsnew.f_dbc);
+    printf("Estimated f_dbc: %.10e\n",(valsnewbc.f-valsnewb.f-valsnewc.f+valsnew.f)/(h*h));
+
+    printf("f_moment: %.10e\n",valsnew.f_moment);
+
+    printf("f_moment_db: %.10e\n",valsnew.f_db_moment);
+     printf("Estimated f_moment_db: %.10e\n",(valsnewb.f_moment-valsnew.f_moment)/h);
+
+    printf("f_moment_dc: %.10e\n",valsnew.f_dc_moment);
+        printf("Estimated f_moment_dc: %.10e\n",(valsnewc.f_moment-valsnew.f_moment)/h);
+
+    printf("f_moment_dbc: %.10e\n",valsnew.f_dbc_moment);
+    printf("Estimated f_moment_dbc: %.10e\n",(valsnewbc.f_moment-valsnewb.f_moment-valsnewc.f_moment+valsnew.f_moment)/(h*h));
+   
+
 }

@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.5.0)
+project(active_sterile VERSION 0.1.0 LANGUAGES C)
+set(CMAKE_C_STANDARD 99)
+find_package(OpenMP)
+include_directories(active_sterile PUBLIC "/home/robbie-ellis/Downloads/sundials-7.2.1/include")
+include_directories(active_sterile PUBLIC "/home/robbie-ellis/Downloads/sundials-7.2.1/BUILDDIR/include")
+set(SUNDIALS_DIR "/home/robbie-ellis/Downloads/sundials-7.2.1/BUILDDIR")
+find_package(SUNDIALS REQUIRED)
+add_executable(active_sterile main.c sn_computations.c sn_cross_sections.c sn_math.c tests.c diffeqs.c derivs.c sundials_solve.c sn_ics.c)
+set (CMAKE_C_FLAGS "-O3")
+
+if(OpenMP_C_FOUND)
+    target_link_libraries(active_sterile PUBLIC OpenMP::OpenMP_C SUNDIALS::cvode m)
+endif()
+
+#target_link_libraries(active_sterile PUBLIC SUNDIALS::cvode)

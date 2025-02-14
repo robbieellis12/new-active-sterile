@@ -244,7 +244,8 @@ struct final_derivs_eq step_omp_eq(struct sp_params sp, struct dx_eq_params* dx_
 {
 double mphi=dx_params->fixed_params->m_phi;
 double T=dx_params->T;
-struct derivs new_derivs=integrated_de_omp_eq(0,100,*dx_params->fixed_params,sp,dx_params->plgs,dx_params->mip);
+struct derivs new_derivs=integrated_de_omp_eq(0,100,*dx_params->fixed_params,sp,dx_params->plgs);
+
 double Tp=sp.Tphi;
 double cp=sp.c_phi;
 double Ts=sp.Ts;

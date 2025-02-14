@@ -19,7 +19,6 @@ struct dx_eq_params
     double T;
     struct polylogs* plgs;
     struct fixed_params* fixed_params;
-    struct massive_interpolation_table* mip;
 };
 
 struct final_derivs{

@@ -86,7 +86,7 @@ struct derivs integrated_de(double xi, double xf, struct fixed_params fixed_para
 
 double H(double T, struct fixed_params* snp);
 struct derivs integrated_de_omp(double xi, double xf, struct fixed_params fixed_params, struct sp_params sp_params, struct polylogs* plgs,struct massive_interpolation_table* mip);
-struct derivs integrated_de_omp_eq(double xi, double xf, struct fixed_params fixed_params, struct sp_params sp_params, struct polylogs* plgs,struct massive_interpolation_table* mip);
+struct derivs integrated_de_omp_eq(double xi, double xf, struct fixed_params fixed_params, struct sp_params sp_params, struct polylogs* plgs);
 struct collision_vals Moment1_omp(double m, double T, double c);
 
 #endif

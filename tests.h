@@ -6,6 +6,7 @@
 #include "sn_computations.h"
 #include "derivs.h"
 #include "sn_ics.h"
+#include "sundials_solve.h"
 
 struct collision_data{
     double C_aa_ss;
@@ -36,7 +37,11 @@ void send_collision_data(char* loc,struct fixed_params fixed_params, struct sp_p
 void moment_test();
 void moment_derivs_test();
 void va_derivs_test(struct polylogs* plgs);
+//void test_collision_interp(double m, double T, double c, struct massless_coll_table* mct);
+
 void test_collision_interp();
 
 void test_massive_colls();
+void test_massive_coll_speed();
+void test_collision_step();
 #endif

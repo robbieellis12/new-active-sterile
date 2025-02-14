@@ -29,7 +29,7 @@ double c_vv_pp(double u,double y)
     }
     double sqrt_term=sqrt(u*(u-4));
     double arg=sqrt_term/(2-u);
-    if(fabs(arg)>1-1e-8)
+    if(fabs(arg)>1-1e-14)
     {
         return 0;
     }

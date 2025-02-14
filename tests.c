@@ -661,6 +661,50 @@ printf("vp val: %.10e\n",vpd.vp);
 
 
 
+/*
+void test_collision_interp()
+{
+    struct massless_coll_table mct;
+    mct.T0=1;
+    mct.T1=20;
+    mct.NT=60;
+    mct.c0=0;
+    mct.c1=5;
+    mct.Nc=20;
+    double m=100;
+    mct.m=m;
+    mct.cs=&c_vv_vv;
+    double y=1;
+    double t1=omp_get_wtime();
+    fill_massless_coll_table(&mct,y);
+    double t2=omp_get_wtime();
+    printf("Time to fill table: %.10e\n",t2-t1);
+    double T=10;
+    double c=1.45;
+    double testval=interp_massless_col(m,T,c,&mct);
+    printf("Test val: %.10e\n",testval);
+    double predictval=ts_quad_massless_coll(m,T,c,y,&c_vv_vv);
+    printf("Predicted val: %.10e\n",predictval);
+
+    struct massless_coll_vals vals=get_massless_coll_vals(m,T,c,y,&c_vv_vv);
+double h=0.001;
+    struct massless_coll_vals valsT=get_massless_coll_vals(m,T+h,c,y,&c_vv_vv);
+    struct massless_coll_vals valsc=get_massless_coll_vals(m,T,c+h,y,&c_vv_vv);
+    struct massless_coll_vals valsTc=get_massless_coll_vals(m,T+h,c+h,y,&c_vv_vv);
+    //printf("Predicted val f: %.10e\n",vals.f);
+    printf("Predicted val f_dt: %.10e\n",vals.f_dT);
+    printf("Test val f_dt: %.10e\n",(valsT.f-vals.f)/h);
+    printf("Predicted val f_dc: %.10e\n",vals.f_dc);
+    printf("Test val f_dc: %.10e\n",(valsc.f-vals.f)/h);
+    printf("Predicted val f_dt_dc: %.10e\n",vals.f_dTc);
+    printf("Test val f_dt_dc: %.10e\n",(valsTc.f-valsT.f-valsc.f+vals.f)/(h*h));
+    printf("Predicted overall val f_dt: %.10e\n",vals.f_dT*T*T*T/(m*m*M_PI*M_PI));
+    free_massless_coll_table(&mct);
+}
+*/
+
+
+
 
 void test_collision_interp()
 {
@@ -681,10 +725,16 @@ void test_collision_interp()
     printf("Time to fill table: %.10e\n",t2-t1);
     double x=0.2;
     double c=1.45;
-    double testval=interp_massless_col(x,c,&mct);
-    printf("Interp val: %.10e\n",testval);
-    double predictval=ts_quad_massless_coll(x,c,y,&c_vv_vv);
-    printf("Predicted val: %.10e\n",predictval);
+    //double coeff=T*T*T*T*T*T/(m*m*M_PI*M_PI);
+    struct massless_coll_return_vals testval=interp_massless_col(x,c,y,&mct);
+    printf("Interp val: %.10e\n",testval.f);
+    printf("Interp val: %.10e\n",testval.f_moment);
+    struct massless_coll_return_vals predictval=ts_quad_massless_coll(x,c,y,&c_vv_vv);
+    printf("Predicted val: %.10e\n",predictval.f);
+    printf("Predicted val: %.10e\n",predictval.f_moment);
+
+
+
 /*
     struct massless_coll_vals vals=get_massless_coll_vals(x,c,y,&c_vv_vv);
 double h=0.001;
@@ -701,16 +751,53 @@ double h=0.001;
     free_massless_coll_table(&mct);
 }
 
+void test_massive_coll_speed()
+{
+omp_set_num_threads(24);
+double m=10;
+
+struct massive_coll_table mct;
+    mct.b0=0.1;
+    mct.b1=10;
+    mct.Nb=100;
+    mct.c0=-5;
+    mct.c1=0;
+    mct.Nc=50;
+    mct.m=m;
+    double y=1;
+    fill_massive_coll_table(&mct,y);
+    struct collision_vals vals;
+    double h=0.001;
+
+    double t1=omp_get_wtime();
+    for(int i=0;i<1000;++i)
+    {
+        vals=interp_massive_colls(m,1+i*h,-i*h,&mct);
+    }
+    double t2=omp_get_wtime();
+    printf("Time to interpolate 1000 points: %.10e\n",t2-t1);
+    free_massive_coll_table(&mct);
+    t1=omp_get_wtime();
+
+    for(int i=0;i<1000;++i)
+    {
+        vals=Moment1_omp(m,m/(1+i*h),-i*h);
+    }
+    t2=omp_get_wtime();
+    printf("Time to predict 1000 points: %.10e\n",t2-t1);
+}
+
+
 
 void test_massive_colls()
 {
 struct massive_coll_table mct;
 
 
-    double m=1;
-    double b=1;
-    double T=m/b;
-    double c=0;
+    double m=50;
+    double T=5000;
+    double b=m/T;
+    double c=-1;
 //struct massive_coll_vals vals=get_collision_vals2(m,b,c);
 /*
 struct massive_coll_vals vals1=get_collision_vals(m,b,c);
@@ -722,14 +809,14 @@ struct massive_coll_vals vals1=get_collision_vals(m,b,c);
     printf("ratio: %.10e\n",(vals2.coll/(vals.f)));*/
 
 
-
+omp_set_num_threads(24);
 
     mct.b0=0.1;
     mct.b1=5;
-    mct.Nb=60;
-    mct.c0=0;
-    mct.c1=5;
-    mct.Nc=50;
+    mct.Nb=120;
+    mct.c0=-5;
+    mct.c1=0;
+    mct.Nc=70;
     mct.m=m;
     double y=1;
     fill_massive_coll_table(&mct,y);
@@ -739,13 +826,15 @@ struct massive_coll_vals vals1=get_collision_vals(m,b,c);
 
 
     struct collision_vals vals=interp_massive_colls(m,b,c,&mct);
+    struct massive_coll_vals explicit=get_collision_vals2(m,b,c);
     struct collision_vals vals2=Moment1_omp(m,m/b,c);
-    printf("Interp val: %.10e\n",vals.coll);
+    printf("Interp val: %.10e \n",vals.coll);
+    //printf("expliciy val: %.10e\n",explicit.f*8/(m*m*b*TWO_PI_4));
     printf("Predicted val: %.10e\n",vals2.coll);
-    printf("Interp moment: %.10e\n",vals.moment);
+    printf("Interp moment: %.10e ",vals.moment);
     printf("Predicted moment: %.10e\n",vals2.moment);
-    printf("ratio: %.10e\n",vals2.moment/vals.moment);
-    printf("ratio: %.10e\n",vals2.coll/vals.coll);
+   // printf("ratio: %.10e\n",vals2.moment/vals.moment);
+    //printf("ratio: %.10e\n",vals2.coll/vals.coll);
     free_massive_coll_table(&mct);
     double h=1e-5;
     /*
@@ -773,6 +862,7 @@ struct massive_coll_vals vals1=get_collision_vals(m,b,c);
     printf("f_moment_dbc: %.10e\n",vals.f_dbc_moment);
    printf("Estimated f_moment_dbc: %.10e\n",(get_collision_vals(m,b+h,c+h).f_moment-valsb.f_moment-valsc.f_moment+vals.f_moment)/(h*h));
 */
+/*
    //repeat with new function:
    struct massive_coll_vals valsnew=get_collision_vals2(m,b,c);
    struct massive_coll_vals valsnewb=get_collision_vals2(m,b+h,c);
@@ -798,7 +888,162 @@ struct massive_coll_vals vals1=get_collision_vals(m,b,c);
         printf("Estimated f_moment_dc: %.10e\n",(valsnewc.f_moment-valsnew.f_moment)/h);
 
     printf("f_moment_dbc: %.10e\n",valsnew.f_dbc_moment);
-    printf("Estimated f_moment_dbc: %.10e\n",(valsnewbc.f_moment-valsnewb.f_moment-valsnewc.f_moment+valsnew.f_moment)/(h*h));
+    printf("Estimated f_moment_dbc: %.10e\n",(valsnewbc.f_moment-valsnewb.f_moment-valsnewc.f_moment+valsnew.f_moment)/(h*h));*/
    
+
+}
+
+void test_collision_step()
+{
+omp_set_num_threads(24);
+struct polylogs plgs;
+    plgs.N=1000;
+    plgs.x0=-2;
+    plgs.x1=1;
+    //omp_set_num_threads(5);
+    fill_polylog_table(&plgs);
+double m_phi=200;
+double theta=1e-8;
+double cos_2theta=cos(2*theta);
+double y=1e-3;
+double m_s=0.7;
+double m_l_a=100;
+struct sp_params sp_params;
+double T=1000;
+sp_params.T=T;
+sp_params.Ts=T;
+sp_params.Tphi=T;
+sp_params.c_s=0;
+sp_params.c_phi=-2;
+
+struct fixed_params fixed_params;
+fixed_params.m_phi=m_phi;
+fixed_params.y=y;
+fixed_params.m_s=m_s;
+fixed_params.theta=theta;
+fixed_params.m_l_a=m_l_a;
+char* gloc="/home/robbie-ellis/VSCode/new active_sterile/gstar.csv";
+read_paired_list(gloc,&fixed_params.T_g,&fixed_params.g_s,&fixed_params.len_g);
+
+int get_eq=1;
+if(get_eq)
+{
+fixed_params.y=1;
+struct dx_eq_params dxp_eq;
+dxp_eq.fixed_params=&fixed_params;
+dxp_eq.plgs=&plgs;
+dxp_eq.T=T;
+
+struct sp_params first_eq;
+#pragma omp parallel master
+{
+//struct derivs derivs=integrated_de_omp_colls(0, 100,fixed_params, sp_params,&int_tables);
+//solve_de_coll(T,  sp_params, &fixed_params,&int_tables);
+first_eq=solve_de_eq(T,sp_params, &dxp_eq);
+}
+printf("First eq: %.10e\n",first_eq.Ts);
+printf("First eq: %.10e\n",first_eq.Tphi);
+printf("First eq: %.10e\n",first_eq.c_s);
+printf("First eq: %.10e\n",first_eq.c_phi);
+
+return;
+}
+
+struct sp_params first_eq_copy;
+/*first_eq_copy.Ts=1059.52;
+first_eq_copy.Tphi=1213.28;
+first_eq_copy.c_s=-0.550168;
+first_eq_copy.c_phi=-1.53165;*/
+first_eq_copy.Ts=T;
+first_eq_copy.Tphi=T;
+first_eq_copy.c_s=-0;
+first_eq_copy.c_phi=-2;
+
+struct massless_coll_table aa_ss_table;
+
+    aa_ss_table.x0=0.1;
+    aa_ss_table.x1=10;
+    aa_ss_table.Nx=100;
+    aa_ss_table.c0=-3;
+    aa_ss_table.c1=0;
+    aa_ss_table.Nc=30;
+    aa_ss_table.m=m_phi;
+    aa_ss_table.cs=&c_vv_vv;
+    fill_massless_coll_table(&aa_ss_table,y);
+
+
+struct massless_coll_table ss_aa_table;
+
+    ss_aa_table.x0=0.1;
+    ss_aa_table.x1=10;
+    ss_aa_table.Nx=100;
+    ss_aa_table.c0=-5;
+    ss_aa_table.c1=0;
+    ss_aa_table.Nc=30;
+    ss_aa_table.m=m_phi;
+    ss_aa_table.cs=&c_vv_vv;
+    fill_massless_coll_table(&ss_aa_table,y);
+
+
+struct massless_coll_table aa_pp_table;
+
+    aa_pp_table.x0=0.1;
+    aa_pp_table.x1=0.2;
+    aa_pp_table.Nx=10;
+    aa_pp_table.c0=-5;
+    aa_pp_table.c1=-4.9;
+    aa_pp_table.Nc=5;
+    aa_pp_table.m=m_phi;
+    aa_pp_table.cs=&c_vv_pp;
+    fill_massless_coll_table(&aa_pp_table,y);
+
+
+struct massless_coll_table ss_pp_table;
+
+    ss_pp_table.x0=0.1;
+    ss_pp_table.x1=10;
+    ss_pp_table.Nx=100;
+    ss_pp_table.c0=-5;
+    ss_pp_table.c1=0;
+    ss_pp_table.Nc=30;
+    ss_pp_table.m=m_phi;
+    ss_pp_table.cs=&c_vv_pp;
+    fill_massless_coll_table(&ss_pp_table,y);
+
+
+struct massive_coll_table pp_vv_table;
+
+  pp_vv_table.b0=0.1;
+    pp_vv_table.b1=10;
+    pp_vv_table.Nb=100;
+    pp_vv_table.c0=-5;
+    pp_vv_table.c1=0;
+    pp_vv_table.Nc=30;
+    pp_vv_table.m=m_phi;
+    fill_massive_coll_table(&pp_vv_table,y);
+
+
+
+struct interpolation_tables int_tables;
+int_tables.aa_ss_table=&aa_ss_table;
+int_tables.ss_aa_table=&ss_aa_table;
+int_tables.aa_pp_table=&aa_pp_table;
+int_tables.ss_pp_table=&ss_pp_table;
+int_tables.pp_vv_table=&pp_vv_table;
+int_tables.plgs=&plgs;
+
+#pragma omp parallel master
+{
+//struct derivs derivs=integrated_de_omp_colls(0, 100,fixed_params, sp_params,&int_tables);
+//solve_de_coll(T,  sp_params, &fixed_params,&int_tables);
+solve_de_coll(T,first_eq_copy, &fixed_params,&int_tables);
+}
+
+free_polylog_table(&plgs);
+free_massless_coll_table(&aa_ss_table);
+free_massless_coll_table(&ss_aa_table);
+free_massless_coll_table(&aa_pp_table);
+free_massless_coll_table(&ss_pp_table);
+free_massive_coll_table(&pp_vv_table);
 
 }

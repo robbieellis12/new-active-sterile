@@ -7,6 +7,11 @@
 int main()
 {
 ts_quad_info(ts_quad_fixed_weights,ts_quad_fixed_nodes,TS_STEP_SIZE,TS_NUM_PTS);
+//test_massive_colls();
+test_collision_step();
+return 0;
+//test_collision_interp();
+//return 0;
 
 //double m1=Moment1(m,T,c);
 //double m2=Moment2(m,T,c);
@@ -17,7 +22,7 @@ struct polylogs plgs;
     plgs.N=1000;
     plgs.x0=-2;
     plgs.x1=1;
-    omp_set_num_threads(5);
+    //omp_set_num_threads(5);
     fill_polylog_table(&plgs);
 //double vav=va(1,0,&plgs);
 //printf("va: %.10e\n",vav);
@@ -49,9 +54,7 @@ for(int i=0;i<N;++i)
 char* loc="/home/robbie-ellis/VSCode/new active_sterile/exported/v_tot.txt";
 export_doubles(loc,vals,N);
 */
-omp_set_num_threads(24);
-test_collision_interp();
-return 0;
+//omp_set_num_threads(24);
 
 double m_phi=100;
 double theta=1e-8;
@@ -60,11 +63,11 @@ double y=1;
 double m_s=0.7;
 double m_l_a=100;
 struct sp_params sp_params;
-double T=1000;
+double T=100;
 sp_params.T=T;
 sp_params.Ts=T;
-sp_params.Tphi=T*1.22;
-sp_params.c_s=-0.01;
+sp_params.Tphi=T;
+sp_params.c_s=0;
 sp_params.c_phi=-2;
 struct massive_interpolation_table mip;
 mip.x0=0;
@@ -87,25 +90,32 @@ read_paired_list(gloc,&fixed_params.T_g,&fixed_params.g_s,&fixed_params.len_g);
 struct dx_params dxp;
 dxp.fixed_params=&fixed_params;
 dxp.plgs=&plgs;
-dxp.mip=&mip;
-struct final_derivs ds=step_omp2(sp_params,&dxp);
+dxp.mip=&mip;*/
+/*
+struct final_derivs ds=step_omp(sp_params,&dxp);
 printf("ts: %.10e\n",ds.dTs);
 printf("cs: %.10e\n",ds.dcs);
 printf("tp: %.10e\n",ds.dTp);
 printf("cp: %.10e\n",ds.dcp);
-*/
+double x=4*T*T/(m_phi*m_phi);
+struct massless_coll_return_vals predictval=ts_quad_massless_coll(x,0,y,&c_vv_vv);
+printf("coll: %.10e\n",predictval.f*8*pow(T,6)/(m_phi*m_phi*TWO_PI_4));*/
+
 
 struct dx_eq_params dxp_eq;
 dxp_eq.fixed_params=&fixed_params;
 dxp_eq.plgs=&plgs;
-dxp_eq.mip=&mip;
 dxp_eq.T=T;
+//struct final_derivs ds=step_omp2(sp_params,&dxp);
+//test_collision_interp();
+
 /*
 struct final_derivs ds_eq=step_omp_eq(sp_params,&dxp_eq);
 printf("ts: %.10e\n",ds_eq.dTs);
 printf("cs: %.10e\n",ds_eq.dcs);
 printf("tp: %.10e\n",ds_eq.dTp);
 printf("cp: %.10e\n",ds_eq.dcp);*/
+
 double t1=omp_get_wtime();
 omp_set_num_threads(24);
 #pragma omp parallel master

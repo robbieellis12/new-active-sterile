@@ -817,9 +817,9 @@ double m_phi2=m_phi*m_phi;
 double y4=y*y*y*y;
 double M_as_p = 8 * y*y * (m_phi2 - m_s * m_s);
 double del;
-double osc_denom;
-double integrated_osc=0;
 double moment_osc=0;
+double osc_denom=0;
+double integrated_osc=0;
 double weight;
 
 double w;
@@ -963,7 +963,7 @@ printf("C_p_p: %.10e\n",derivs.C_p_p);
 
 
 
-struct derivs integrated_de_omp_eq(double xi, double xf, struct fixed_params fixed_params, struct sp_params sp_params, struct polylogs* plgs,struct massive_interpolation_table* mip)
+struct derivs integrated_de_omp_eq(double xi, double xf, struct fixed_params fixed_params, struct sp_params sp_params, struct polylogs* plgs)
 {
 
 int n=TS_NUM_PTS;
